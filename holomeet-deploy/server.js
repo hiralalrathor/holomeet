@@ -31,4 +31,5 @@ io.on('connection', sock => {
     if (!io.sockets.adapter.rooms.get(room)) wipe(room); // last user left: destroy all room data
   });
 });
+require('./video')(app, io, iceServers, redis);
 srv.listen(process.env.PORT || 3000, () => console.log('HoloMeet on http://localhost:' + (process.env.PORT || 3000)));

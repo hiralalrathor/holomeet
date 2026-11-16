@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>HoloMeet – Home</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="wrap"><div class="card"><div class="row" style="align-items:center"><div><h1 id="hi"></h1><span class="mut" id="ty"></span></div><button class="g" id="out" style="flex:0">Sign out</button></div></div>
+<div class="card"><h1 style="font-size:20px">Start a meeting</h1><p class="mut">Creates a video call with a shareable code.</p><div class="row"><button id="new">＋ New meeting</button><button id="later" class="g">🔗 Link for later</button></div><div id="inv" class="mut" style="margin-top:10px;word-break:break-all"></div></div>
+<div class="card"><h1 style="font-size:20px">Join a meeting</h1><input id="code" placeholder="Enter code or link (abc-defg-hij)"><div class="err" id="err"></div>
+<div class="row"><button id="join">Join video call</button><button id="holo" class="g">Join in 3D room</button></div></div><div class="card" id="rc" hidden><h1 style="font-size:20px">Recent meetings</h1><div id="rl"></div></div></div>
+<script>
+const $=s=>document.querySelector(s),T=localStorage.getItem('hm_token');let U=null;
+try{U=JSON.parse(localStorage.getItem('hm_user'))}catch(e){}
+if(!U||!T||U.exp<Date.now()){localStorage.clear();location.replace('index.html')}
+$('#hi').textContent='Hi, '+U.name;$('#ty').textContent=U.type==='guest'?'Guest session':'Signed in';
+$('#out').onclick=()=>{localStorage.clear();location='index.html'};
+$('#new').onclick=async()=>{const r=await fetch('/api/rooms',{method:'POST',headers:{Authorization:'Bearer '+T}});const d=await r.json();
+ if(!r.ok){localStorage.clear();return location='index.html'}location='meet.html?r='+d.code};
+function code(){let v=$('#code').value.trim().toLowerCase();const m=v.match(/[?&]r=([a-z0-9-]+)/)||v.match(/#([a-z0-9-]+)/);if(m)v=m[1];
+ if(!/^[a-z0-9-]{3,24}$/.test(v)){$('#err').textContent='Enter a valid meeting code.';return null}return v}
+$('#join').onclick=()=>{const c=code();if(c)location='meet.html?r='+c};
+$('#holo').onclick=()=>{const c=code();if(c)location='holo.html#'+c};
+$('#later').onclick=async()=>{const r=await fetch('/api/rooms',{method:'POST',headers:{Authorization:'Bearer '+T}});const d=await r.json();if(!r.ok)return;const l=location.origin+'/meet.html?r='+d.code;
+ $('#inv').innerHTML='';const t=document.createElement('span');t.textContent=l+'  ';const b=document.createElement('button');b.className='g';b.textContent='Copy invite';
+ b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText('Join my HoloMeet meeting: '+l);b.textContent='✓ Copied'};$('#inv').append(t,b)};
+try{const r=JSON.parse(localStorage.getItem('hm_recent')||'[]');if(r.length){$('#rc').hidden=false;r.forEach(x=>{const b=document.createElement('button');b.className='g';b.style.margin='3px';b.textContent=x.code;b.onclick=()=>location='meet.html?r='+x.code;$('#rl').append(b)})}}catch(e){}
+</script></body></html>
